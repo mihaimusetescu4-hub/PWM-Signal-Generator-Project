@@ -28,6 +28,12 @@ module regs (
     to sizes as specified in the architecture documentation.
 */
 
+//MODIFIED
+reg [7:0] r_data_read;
+assign data_read = r_data_read;
+//END OF MODIFIED
+
+
 // Internal Register Storage (r_prefix)
 // These are the actual registers (D-FF based) that hold the configuration values
 
@@ -141,7 +147,7 @@ end
 // It is combinational because the master needs the data immediately when 'read' is asserted
 
 always @(*) begin
-    data_read = 8'h00; // Default value if no read is active or address is invalid
+    r_data_read = 8'h00; // Default value if no read is active or address is invalid
 
     if(read) begin
 	// Similar address decoding, but now for read operations
@@ -149,51 +155,51 @@ always @(*) begin
             // READ PERIOD (ADDR 0x00)
             5'h00: begin
                 if (hl_bit == 1'b0) 
-                    data_read = r_period[7:0]; // Read Low Byte
+                    r_data_read = r_period[7:0]; // Read Low Byte
                 else
-                    data_read = r_period[15:8]; // Read High Byte
+                    r_data_read = r_period[15:8]; // Read High Byte
             end
 
 	    // READ COUNT_EN (ADDR 0x02)
-            5'h02: data_read = {7'b0, r_count_en}; // Pad 1-bit value to 8 bits
+            5'h02: r_data_read = {7'b0, r_count_en}; // Pad 1-bit value to 8 bits
             
 	    // READ COMPARE1 (ADDR 0x03)
             5'h03: begin
                 if (hl_bit == 1'b0)
-                    data_read = r_compare1[7:0];
+                    r_data_read = r_compare1[7:0];
                 else 
-                    data_read = r_compare1[15:8];
+                    r_data_read = r_compare1[15:8];
             end
             
 	    // READ COMPARE2 (ADDR 0x05)
             5'h05: begin
                 if (hl_bit == 1'b0) 
-                    data_read = r_compare2[7:0];
+                    r_data_read = r_compare2[7:0];
                 else          
-                    data_read = r_compare2[15:8];
+                    r_data_read = r_compare2[15:8];
             end
             
 	    // READ COUNTER_VAL (ADDR 0x08)
             5'h08: begin
                 if (hl_bit == 1'b0)
-                    data_read = counter_val[7:0]; // Read Low Byte of the current counter state
+                    r_data_read = counter_val[7:0]; // Read Low Byte of the current counter state
                 else       
-                    data_read = counter_val[15:8]; // Read High Byte of the current counter state
+                    r_data_read = counter_val[15:8]; // Read High Byte of the current counter state
             end
             
 	    // READ PRESCALE (ADDR 0x0A)
-            5'h0A: data_read = r_prescale;
+            5'h0A: r_data_read = r_prescale;
 
             // READ UPNOTDOWN (ADDR 0x0B)
-            5'h0B: data_read = {7'b0, r_upnotdown};
+            5'h0B: r_data_read = {7'b0, r_upnotdown};
 
             // READ PWM_EN (ADDR 0x0C)
-            5'h0C: data_read = {7'b0, r_pwm_en};
+            5'h0C: r_data_read = {7'b0, r_pwm_en};
 
             // READ FUNCTIONS (ADDR 0x0D)
-            5'h0D: data_read = {6'b0, r_functions};
+            5'h0D: r_data_read = {6'b0, r_functions};
             
-            default: data_read = 8'hFF; // Reserved/unmapped address reads back 0xFF (Error indication)
+            default: r_data_read = 8'hFF; // Reserved/unmapped address reads back 0xFF (Error indication)
         endcase
     end
 end

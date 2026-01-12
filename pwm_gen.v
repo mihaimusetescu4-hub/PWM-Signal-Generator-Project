@@ -17,7 +17,7 @@ module pwm_gen (
 
 // Internal state register for the PWM output
 reg r_pwm_out;
-assign pwm_out = r_pwm_out;
+assign pwm_out = (rst_n && pwm_en) ? r_pwm_out : 1'b0;t;
 
 // Wire declarations for internal clarity
 wire compare1_match = (count_val >= compare1); // Check if counter has reached or passed Compare1
@@ -42,15 +42,20 @@ always @(posedge clk or negedge rst_n) begin
     else begin
         case (function_mode)
             
-            // MODE 00: Output Disabled / Idle
-            2'b00: r_pwm_out <= 1'b0;
+            // MODE 00: ALIGN LEFT
+            2'b00: begin
+                if(compare1 != 16'd0)
+                    r_pwm_out <= (count_val <= compare1);
+                else
+                    r_pwm_out <= 1'b0;
+            end
 
-            // MODE 01: Standard PWM (Non-Inverted, High when count < C1)
+            // MODE 01: ALIGN RIGHT
             // Pulse starts at 0 and ends when count hits compare1.
             // Duty Cycle = (Compare1 / Period)
             
             2'b01: begin
-                if (count_val < compare1) begin
+                if (count_val >= compare1) begin
                     r_pwm_out <= 1'b1; // Output HIGH during the pulse duration
                 end
                 else begin
@@ -58,33 +63,19 @@ always @(posedge clk or negedge rst_n) begin
                 end
             end
 
-            // MODE 10: Inverted PWM (Low when count < C1)
+            // MODE 10: UNALIGNED / DUAL COMPARE
             // Pulse is LOW when the counter is below C1, and HIGH otherwise
             // This is the logical inverse of Mode 01
             
             2'b10: begin
-                if (count_val < compare1) begin
-                    r_pwm_out <= 1'b0; // Output LOW during the pulse duration
+                if (compare1 < compare2) begin
+                    r_pwm_out <= (count_val >= compare1) && (count_val <  compare2); // Output LOW during the pulse duration
                 end
                 else begin
-                    r_pwm_out <= 1'b1; // Output HIGH after the comparison match
+                    r_pwm_out <= 1'b0; // Output HIGH after the comparison match
                 end
             end
             
-            // MODE 11: Dual Edge/Center-Aligned or Two-Comparator Mode
-            // The pulse is HIGH only when the counter is BETWEEN Compare1 and Compare2	   
-            // Pulse starts when C1 is matched, and ends when C2 is matched (as long as C1 < C2)
-            
-            2'b11: begin
-                // Pulse HIGH when: (count_val >= compare1) AND (count_val < compare2)
-                if (count_val >= compare1 && count_val < compare2) begin
-                    r_pwm_out <= 1'b1;
-                end
-                else begin
-                    r_pwm_out <= 1'b0;
-                end
-            end
-
             default: r_pwm_out <= 1'b0; // Safety default
         endcase
     end

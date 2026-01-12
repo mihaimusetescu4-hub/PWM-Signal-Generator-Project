@@ -20,8 +20,8 @@ reg r_pwm_out;
 assign pwm_out = (rst_n && pwm_en) ? r_pwm_out : 1'b0;t;
 
 // Wire declarations for internal clarity
-wire compare1_match = (count_val >= compare1); // Check if counter has reached or passed Compare1
-wire compare2_match = (count_val >= compare2); // Check if counter has reached or passed Compare2
+// wire compare1_match = (count_val >= compare1); // Check if counter has reached or passed Compare1
+// wire compare2_match = (count_val >= compare2); // Check if counter has reached or passed Compare2
 wire [1:0] function_mode = functions[1:0]; // Extract the 2-bit mode selector from the functions register
 
 // SEQUENTIAL LOGIC BLOCK
